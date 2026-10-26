@@ -12,7 +12,7 @@
 <body class="bg-gray-900 text-gray-100 font-sans antialiased h-screen overflow-hidden flex flex-col select-none">
 
     <!-- Horní lišta -->
-    <header class="bg-gray-800 p-4 shadow-md text-center shrink-0 border-b border-gray-700">
+    <header class="bg-gray-800 p-4 shadow-md text-center shrink-0 border-b border-gray-700 flex justify-center items-center relative">
         <h1 class="text-2xl font-black text-amber-500 uppercase tracking-wider">Karetní Tracker</h1>
     </header>
 
@@ -20,19 +20,106 @@
     <main class="flex-1 overflow-y-auto p-4">
         
         <!-- DASHBOARD -->
-        <div id="screen-dashboard" class="screen flex flex-col gap-5 h-full justify-center max-w-md mx-auto">
-            <button onclick="navSetup()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 active:scale-95 transition-transform text-white font-bold py-7 rounded-2xl text-xl shadow-lg border-b-4 border-blue-800">
+        <div id="screen-dashboard" class="screen flex flex-col gap-4 h-full justify-center max-w-md mx-auto">
+            <button onclick="navSetup()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 active:scale-95 transition-transform text-white font-bold py-6 rounded-2xl text-xl shadow-lg border-b-4 border-blue-800">
                 🃏 Zápis herního dne
             </button>
-            <button onclick="navStats()" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-850 active:scale-95 transition-transform text-white font-bold py-7 rounded-2xl text-xl shadow-lg border border-gray-700">
+            <button onclick="navStats()" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-850 active:scale-95 transition-transform text-white font-bold py-5 rounded-2xl text-lg shadow-lg border border-gray-700">
                 🏆 Statistiky & Žebříček
             </button>
-            <div id="activeSessionNotice" class="hidden text-center mt-2 bg-emerald-950/40 p-4 rounded-2xl border border-emerald-600/50">
+
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="navHistory()" class="bg-gray-800 hover:bg-gray-700 active:scale-95 transition text-gray-300 font-bold py-4 rounded-2xl shadow border border-gray-700">
+                    🕒 Historie
+                </button>
+                <button onclick="navManagePlayers()" class="bg-gray-800 hover:bg-gray-700 active:scale-95 transition text-gray-300 font-bold py-4 rounded-2xl shadow border border-gray-700">
+                    👥 Hráči
+                </button>
+            </div>
+            
+            <button onclick="navAbout()" class="w-full mt-2 bg-gray-900 hover:bg-gray-800 active:scale-95 transition text-gray-500 font-bold py-3 rounded-2xl shadow border border-gray-800 text-sm">
+                ℹ️ Návod
+            </button>
+
+            <div id="activeSessionNotice" class="hidden text-center mt-4 bg-emerald-950/40 p-4 rounded-2xl border border-emerald-600/50">
                 <p class="text-emerald-400 font-bold mb-2 text-sm">Právě běží rozehraný den</p>
-                <button onclick="navActiveSession()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3.5 rounded-xl active:scale-95 transition shadow">
+                <button onclick="navActiveSession()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 rounded-xl active:scale-95 transition shadow">
                     Vrátit se do hry ➜
                 </button>
             </div>
+        </div>
+
+        <!-- O APLIKACI (NÁVOD) -->
+        <div id="screen-about" class="screen hidden flex flex-col h-full max-w-md mx-auto">
+            <div class="flex items-center mb-4 shrink-0">
+                <button onclick="navDashboard()" class="text-gray-400 p-2 font-bold active:scale-95">⬅ Zpět</button>
+                <h2 class="text-lg font-bold ml-2">Návod & Info</h2>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto bg-gray-800/80 border border-gray-700 rounded-xl p-5 text-sm text-gray-300 space-y-4">
+                <p>Aplikace počítá hry, kde <strong>jeden vyhrává a všichni ostatní prohrávají</strong>.</p>
+                <ul class="list-disc pl-5 space-y-2">
+                    <li><strong class="text-blue-400">Zápis dne:</strong> Vyber datum, zaklikni hráče u stolu a po každé hře klikni na vítěze.</li>
+                    <li><strong class="text-amber-400">Vrátit krok:</strong> Maže poslední překliknutí v právě hraném dni.</li>
+                    <li><strong class="text-emerald-400">Statistiky:</strong> Hráč se ukáže v žebříčku až po odehrání min. 3 her. Smazaný hráč ze statistik zmizí.</li>
+                    <li><strong class="text-rose-400">Historie:</strong> Lze smazat celý chybný den včetně nahraného skóre (chráněno PINem).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SPRÁVA HRÁČŮ -->
+        <div id="screen-players" class="screen hidden flex flex-col h-full max-w-md mx-auto">
+            <div class="flex items-center mb-4 shrink-0">
+                <button onclick="navDashboard()" class="text-gray-400 p-2 font-bold active:scale-95">⬅ Zpět</button>
+                <h2 class="text-lg font-bold ml-2">Správa hráčů</h2>
+            </div>
+
+            <div class="shrink-0 flex gap-2 mb-4">
+                <input type="text" id="manageNewPlayerName" placeholder="Nové jméno..." class="flex-1 bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                <button onclick="addPlayerFromManage()" class="bg-blue-600 text-white px-5 font-bold rounded-xl active:scale-95">Přidat</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto bg-gray-800/80 border border-gray-700 rounded-xl p-2">
+                <ul id="managePlayersList" class="divide-y divide-gray-700/50">
+                    <!-- Generováno JS -->
+                </ul>
+            </div>
+            <p class="text-center text-xs text-gray-500 mt-2 shrink-0">*Smazání hráče ho vymaže i z celkových statistik.</p>
+        </div>
+
+        <!-- HISTORIE HER (SEZNAM) -->
+        <div id="screen-history" class="screen hidden flex flex-col h-full max-w-md mx-auto">
+            <div class="flex items-center mb-4 shrink-0">
+                <button onclick="navDashboard()" class="text-gray-400 p-2 font-bold active:scale-95">⬅ Zpět</button>
+                <h2 class="text-lg font-bold ml-2">Historie dnů</h2>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto bg-gray-800/80 border border-gray-700 rounded-xl p-2">
+                <ul id="historyList" class="divide-y divide-gray-700/50">
+                    <!-- Generováno JS -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- HISTORIE DETAIL (S MAZÁNÍM) -->
+        <div id="screen-history-detail" class="screen hidden flex flex-col h-full max-w-md mx-auto">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <div class="flex items-center">
+                    <button onclick="navHistory()" class="text-gray-400 p-2 font-bold active:scale-95">⬅ Zpět</button>
+                    <h2 class="text-lg font-bold ml-2" id="historyDetailDate">Detail dne</h2>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto bg-gray-800/80 border border-gray-700 rounded-xl p-4 mb-4">
+                <h3 class="text-xs font-bold uppercase text-gray-400 mb-2">Výsledky u stolu:</h3>
+                <table class="w-full text-left text-sm" id="historyDetailFeed">
+                    <!-- Generováno JS -->
+                </table>
+            </div>
+
+            <button id="btnDeleteSession" class="w-full bg-rose-900/60 border border-rose-800 text-rose-400 hover:bg-rose-800 active:scale-95 transition-transform font-bold py-4 rounded-xl text-lg shadow-lg shrink-0">
+                🗑 Smazat tento den (PIN)
+            </button>
         </div>
 
         <!-- SETUP NOVÉHO DNE -->
@@ -56,12 +143,8 @@
                 </div>
             </div>
 
-            <div class="shrink-0 flex flex-col gap-3 pt-2 border-t border-gray-800">
-                <div class="flex gap-2">
-                    <input type="text" id="newPlayerName" placeholder="Jméno nového hráče..." class="flex-1 bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
-                    <button onclick="addNewPlayer()" class="bg-gray-700 active:bg-gray-600 px-5 font-bold rounded-xl active:scale-95">Přidat</button>
-                </div>
-                <button onclick="startSession()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-lg shadow-lg active:scale-95">
+            <div class="shrink-0 pt-2 border-t border-gray-800">
+                <button onclick="startSession()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-lg shadow-lg active:scale-95 mt-2">
                     Začít hrát
                 </button>
             </div>
@@ -81,7 +164,6 @@
 
             <p class="text-center text-xs text-gray-400 my-2">Klepni na toho, kdo vyhrál hru:</p>
 
-            <!-- Tlačítka pro klikání palcem -->
             <div id="activePlayersGrid" class="grid grid-cols-2 gap-3 mb-4"></div>
 
             <div class="flex justify-between items-center mb-2 shrink-0">
@@ -120,15 +202,15 @@
 
     </main>
 
-    <!-- Firebase SDK (ESM import přes oficiální CDN) -->
+    <!-- Firebase SDK (ESM import) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { 
             getFirestore, collection, addDoc, getDocs, onSnapshot, 
-            query, where, orderBy, deleteDoc, doc, updateDoc, serverTimestamp 
+            query, where, deleteDoc, doc, updateDoc, serverTimestamp 
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-        // Konfigurace přímo z tvého projektu
+        // Tvoje Firebase Konfigurace
         const firebaseConfig = {
             apiKey: "AIzaSyA0ea1lrXK4qr5ZQvcWYlovp1vMTAYETio",
             authDomain: "karty-hospoda.firebaseapp.com",
@@ -155,7 +237,7 @@
             listenToActiveSession();
         });
 
-        // Přepínání obrazovek
+        // ================= NAVIGACE =================
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
@@ -165,37 +247,58 @@
         window.navSetup = () => { renderSetupPlayers(); showScreen('screen-setup'); };
         window.navStats = () => { loadAndRenderStats(); showScreen('screen-stats'); };
         window.navActiveSession = () => showScreen('screen-session');
+        window.navAbout = () => showScreen('screen-about');
+        window.navManagePlayers = () => { renderManagePlayers(); showScreen('screen-players'); };
+        window.navHistory = () => { loadHistory(); showScreen('screen-history'); };
 
-        // Hráči
+        // ================= HRÁČI =================
         function loadPlayers() {
             onSnapshot(collection(db, "players"), (snapshot) => {
                 allPlayers = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 allPlayers.sort((a, b) => a.name.localeCompare(b.name, 'cs'));
-                if (!document.getElementById('screen-setup').classList.contains('hidden')) {
-                    renderSetupPlayers();
-                }
+                
+                if (!document.getElementById('screen-setup').classList.contains('hidden')) renderSetupPlayers();
+                if (!document.getElementById('screen-players').classList.contains('hidden')) renderManagePlayers();
+                if (currentSession) renderSessionFeed();
             });
         }
 
-        window.addNewPlayer = async () => {
-            const input = document.getElementById('newPlayerName');
+        window.addPlayerFromManage = async () => {
+            const input = document.getElementById('manageNewPlayerName');
             const name = input.value.trim();
             if (!name) return;
-
-            await addDoc(collection(db, "players"), {
-                name: name,
-                createdAt: serverTimestamp()
-            });
+            await addDoc(collection(db, "players"), { name: name, createdAt: serverTimestamp() });
             input.value = '';
         };
+
+        window.deletePlayer = async (id, name) => {
+            if(confirm(`Opravdu smazat hráče ${name}?\n(Zmizí z budoucích her a z žebříčku, ale v historii už odehraných dnů zůstane vidět).`)) {
+                await deleteDoc(doc(db, "players", id));
+            }
+        };
+
+        function renderManagePlayers() {
+            const list = document.getElementById('managePlayersList');
+            if (allPlayers.length === 0) {
+                list.innerHTML = `<li class="p-4 text-center text-gray-500 text-sm">Zatím žádní hráči.</li>`;
+                return;
+            }
+            list.innerHTML = allPlayers.map(p => `
+                <li class="flex justify-between items-center p-3 hover:bg-gray-700/50 transition">
+                    <span class="font-bold text-gray-200">${p.name}</span>
+                    <button onclick="deletePlayer('${p.id}', '${p.name}')" class="text-rose-400 p-2 active:scale-95 bg-rose-950/30 rounded-lg text-sm border border-rose-900/50">
+                        Smazat
+                    </button>
+                </li>
+            `).join('');
+        }
 
         function renderSetupPlayers() {
             const list = document.getElementById('playersList');
             if (allPlayers.length === 0) {
-                list.innerHTML = `<p class="text-gray-500 text-sm text-center py-4">Žádní hráči v databázi. Přidej prvního dole.</p>`;
+                list.innerHTML = `<p class="text-gray-500 text-sm text-center py-4">Žádní hráči. Jdi zpět a přidej je v "Správa hráčů".</p>`;
                 return;
             }
-
             list.innerHTML = allPlayers.map(p => `
                 <label class="flex items-center gap-3.5 bg-gray-800/90 border border-gray-700 p-3.5 rounded-xl active:bg-gray-700 transition">
                     <input type="checkbox" value="${p.id}" onchange="updateSelectedCount()" class="player-checkbox w-5 h-5 rounded bg-gray-900 border-gray-600 text-blue-600 focus:ring-0">
@@ -210,7 +313,7 @@
             document.getElementById('selectedCount').innerText = `${count} vybráno`;
         };
 
-        // Běh hry (Session)
+        // ================= SESSION (HERNÍ DEN) =================
         function listenToActiveSession() {
             const q = query(collection(db, "sessions"), where("active", "==", true));
             onSnapshot(q, (snapshot) => {
@@ -238,23 +341,19 @@
                 alert("Vyber aspoň 2 hráče.");
                 return;
             }
-
             await addDoc(collection(db, "sessions"), {
                 date: date,
                 playerIds: playerIds,
                 active: true,
                 createdAt: serverTimestamp()
             });
-
             navActiveSession();
         };
 
         window.endSession = async () => {
-            if (confirm("Chceš dnešní herní den uzavřít?")) {
+            if (confirm("Chceš dnešní herní den uzavřít? (Uloží se do historie)")) {
                 if (unsubscribeGames) unsubscribeGames();
-                await updateDoc(doc(db, "sessions", currentSession.id), {
-                    active: false
-                });
+                await updateDoc(doc(db, "sessions", currentSession.id), { active: false });
                 navDashboard();
             }
         };
@@ -265,16 +364,16 @@
 
             grid.innerHTML = currentSession.playerIds.map(id => {
                 const player = allPlayers.find(p => p.id === id);
-                const name = player ? player.name : 'Neznámý';
+                const name = player ? player.name : 'Smazaný hráč';
                 return `
                     <button onclick="recordWin('${id}')" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 active:scale-95 text-white font-bold py-5 px-3 rounded-2xl shadow border-b-4 border-blue-800 text-lg transition truncate">
                         ${name}
                     </button>
                 `;
             }).join('');
+            renderSessionFeed();
         }
 
-        // Zápis výhry
         window.recordWin = async (winnerId) => {
             const loserIds = currentSession.playerIds.filter(id => id !== winnerId);
             await addDoc(collection(db, "games"), {
@@ -287,21 +386,21 @@
 
         function listenToSessionGames() {
             if (unsubscribeGames) unsubscribeGames();
-            const q = query(collection(db, "games"), where("sessionId", "==", currentSession.id), orderBy("timestamp", "asc"));
+            const q = query(collection(db, "games"), where("sessionId", "==", currentSession.id));
             unsubscribeGames = onSnapshot(q, (snapshot) => {
                 sessionGames = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                sessionGames.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
                 renderSessionFeed();
             });
         }
 
         function renderSessionFeed() {
+            if (!currentSession) return;
             const winsCount = {};
             currentSession.playerIds.forEach(id => winsCount[id] = 0);
 
             sessionGames.forEach(g => {
-                if (winsCount[g.winnerId] !== undefined) {
-                    winsCount[g.winnerId]++;
-                }
+                if (winsCount[g.winnerId] !== undefined) winsCount[g.winnerId]++;
             });
 
             const feed = document.getElementById('sessionFeed');
@@ -311,7 +410,7 @@
                 const p = allPlayers.find(item => item.id === id);
                 return `
                     <tr class="border-b border-gray-700/60 last:border-0">
-                        <td class="py-2.5 font-medium text-gray-200">${p ? p.name : '?'}</td>
+                        <td class="py-2.5 font-medium text-gray-200">${p ? p.name : 'Smazaný hráč'}</td>
                         <td class="py-2.5 text-right font-bold text-amber-400">${winsCount[id]} výher</td>
                     </tr>
                 `;
@@ -324,7 +423,101 @@
             await deleteDoc(doc(db, "games", lastGame.id));
         };
 
-        // Globální žebříček
+        // ================= HISTORIE =================
+        async function loadHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = `<p class="text-center text-gray-500 py-4">Načítám historii...</p>`;
+            
+            const snap = await getDocs(collection(db, "sessions"));
+            let sessions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            
+            // Seřadíme podle data od nejnovějšího
+            sessions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (sessions.length === 0) {
+                list.innerHTML = `<p class="text-center text-gray-500 py-4">Zatím žádné odehrané dny.</p>`;
+                return;
+            }
+
+            list.innerHTML = sessions.map(s => {
+                const isActive = s.active ? `<span class="bg-emerald-600/30 text-emerald-400 text-xs px-2 py-0.5 rounded ml-2 border border-emerald-500/50">Probíhá</span>` : '';
+                return `
+                <li class="p-3 hover:bg-gray-700/50 transition cursor-pointer flex justify-between items-center" onclick="openHistoryDetail('${s.id}', '${s.date}')">
+                    <div>
+                        <span class="font-bold text-blue-400">${s.date}</span> ${isActive}
+                        <div class="text-xs text-gray-400 mt-1">Počet hráčů: ${s.playerIds ? s.playerIds.length : 0}</div>
+                    </div>
+                    <span class="text-gray-500">➜</span>
+                </li>
+            `}).join('');
+        }
+
+        window.openHistoryDetail = async (sessionId, date) => {
+            showScreen('screen-history-detail');
+            document.getElementById('historyDetailDate').innerText = `Den: ${date}`;
+            const feed = document.getElementById('historyDetailFeed');
+            feed.innerHTML = `<tr><td class="py-4 text-center text-gray-500 text-xs">Načítám hry...</td></tr>`;
+            
+            // Nastavíme tlačítko pro smazání
+            document.getElementById('btnDeleteSession').onclick = () => deleteSessionWithPin(sessionId);
+
+            // Načteme všechny hry pro tento den
+            const q = query(collection(db, "games"), where("sessionId", "==", sessionId));
+            const gamesSnap = await getDocs(q);
+            
+            const winsCount = {};
+            gamesSnap.forEach(docSnap => {
+                const g = docSnap.data();
+                if (!winsCount[g.winnerId]) winsCount[g.winnerId] = 0;
+                winsCount[g.winnerId]++;
+                // Přidáme i ty, co jen prohráli (aby byli v tabulce s nulou)
+                g.loserIds.forEach(lId => {
+                    if (winsCount[lId] === undefined) winsCount[lId] = 0;
+                });
+            });
+
+            const sortedIds = Object.keys(winsCount).sort((a, b) => winsCount[b] - winsCount[a]);
+            
+            if (sortedIds.length === 0) {
+                feed.innerHTML = `<tr><td class="py-4 text-center text-gray-500 text-xs">Tento den se neodehrála žádná hra.</td></tr>`;
+                return;
+            }
+
+            feed.innerHTML = sortedIds.map(id => {
+                const p = allPlayers.find(item => item.id === id);
+                return `
+                    <tr class="border-b border-gray-700/60 last:border-0">
+                        <td class="py-2.5 font-medium text-gray-200">${p ? p.name : 'Smazaný hráč'}</td>
+                        <td class="py-2.5 text-right font-bold text-amber-400">${winsCount[id]} výher</td>
+                    </tr>
+                `;
+            }).join('');
+        };
+
+        window.deleteSessionWithPin = async (sessionId) => {
+            const pin = prompt("Tato akce smaže herní den a vymaže ho ze statistik všech hráčů.\n\nZadej PIN pro smazání:");
+            if (pin === "4321") {
+                try {
+                    // 1. Najdeme a smažeme všechny hry z tohoto dne
+                    const q = query(collection(db, "games"), where("sessionId", "==", sessionId));
+                    const gamesSnap = await getDocs(q);
+                    const deletePromises = gamesSnap.docs.map(d => deleteDoc(doc(db, "games", d.id)));
+                    await Promise.all(deletePromises);
+                    
+                    // 2. Smažeme samotný záznam o dni
+                    await deleteDoc(doc(db, "sessions", sessionId));
+                    
+                    alert("Herní den byl úspěšně smazán.");
+                    navHistory();
+                } catch (e) {
+                    alert("Došlo k chybě při mazání: " + e.message);
+                }
+            } else if (pin !== null) {
+                alert("Nesprávný PIN. Mazání zrušeno.");
+            }
+        };
+
+        // ================= STATISTIKY =================
         async function loadAndRenderStats() {
             const tbody = document.getElementById('statsTableBody');
             tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-gray-500">Počítám statistiky...</td></tr>`;
@@ -332,6 +525,7 @@
             const gamesSnap = await getDocs(collection(db, "games"));
             const stats = {};
 
+            // Inicializujeme jen pro existující hráče (smazaní hráči se v žebříčku neukážou)
             allPlayers.forEach(p => {
                 stats[p.id] = { name: p.name, wins: 0, losses: 0, total: 0 };
             });
