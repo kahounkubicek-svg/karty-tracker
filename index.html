@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hospodský Karetní Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans antialiased h-screen overflow-hidden flex flex-col select-none">
+
+    <!-- Horní lišta -->
+    <header class="bg-gray-800 p-4 shadow-md text-center shrink-0 border-b border-gray-700">
+        <h1 class="text-2xl font-black text-amber-500 uppercase tracking-wider">Karetní Tracker</h1>
+    </header>
+
+    <!-- Hlavní obsah -->
+    <main class="flex-1 overflow-y-auto p-4">
+        
+        <!-- DASHBOARD -->
+        <div id="screen-dashboard" class="screen flex flex-col gap-5 h-full justify-center max-w-md mx-auto">
+            <button onclick="navSetup()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 active:scale-95 transition-transform text-white font-bold py-7 rounded-2xl text-xl shadow-lg border-b-4 border-blue-800">
+                🃏 Zápis herního dne
+            </button>
+            <button onclick="navStats()" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-850 active:scale-95 transition-transform text-white font-bold py-7 rounded-2xl text-xl shadow-lg border border-gray-700">
+                🏆 Statistiky & Žebříček
+            </button>
+            <div id="activeSessionNotice" class="hidden text-center mt-2 bg-emerald-950/40 p-4 rounded-2xl border border-emerald-600/50">
+                <p class="text-emerald-400 font-bold mb-2 text-sm">Právě běží rozehraný den</p>
+                <button onclick="navActiveSession()" class="w-full bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3.5 rounded-xl active:scale-95 transition shadow">
+                    Vrátit se do hry ➜
+                </button>
+            </div>
+        </div>
+
+        <!-- SETUP NOVÉHO DNE -->
+        <div id="screen-setup" class="screen hidden flex flex-col h-full max-w-md mx-auto">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <button onclick="navDashboard()" class="text-gray-400 p-2 font-bold active:scale-95">✕ Zrušit</button>
+                <h2 class="text-lg font-bold">Nový herní den</h2>
+                <div class="w-10"></div>
+            </div>
+            
+            <label class="text-xs text-gray-400 font-bold uppercase mb-1">Datum</label>
+            <input type="date" id="sessionDate" class="w-full bg-gray-800 border border-gray-700 text-white p-3.5 rounded-xl mb-4 text-base focus:outline-none focus:border-blue-500">
+            
+            <div class="flex-1 overflow-y-auto mb-4 pr-1">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs text-gray-400 font-bold uppercase">Vyber hráče u stolu</h3>
+                    <span id="selectedCount" class="text-xs text-blue-400 font-semibold">0 vybráno</span>
+                </div>
+                <div id="playersList" class="flex flex-col gap-2.5">
+                    <p class="text-gray-500 text-sm text-center py-6">Načítám hráče...</p>
+                </div>
+            </div>
+
+            <div class="shrink-0 flex flex-col gap-3 pt-2 border-t border-gray-800">
+                <div class="flex gap-2">
+                    <input type="text" id="newPlayerName" placeholder="Jméno nového hráče..." class="flex-1 bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+                    <button onclick="addNewPlayer()" class="bg-gray-700 active:bg-gray-600 px-5 font-bold rounded-xl active:scale-95">Přidat</button>
+                </div>
+                <button onclick="startSession()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-lg shadow-lg active:scale-95">
+                    Začít hrát
+                </button>
+            </div>
+        </div>
+
+        <!-- AKTIVNÍ HRA -->
+        <div id="screen-session" class="screen hidden flex flex-col h-full max-w-md mx-auto">
+            <div class="flex justify-between items-center mb-2 shrink-0">
+                <div>
+                    <span class="text-xs text-emerald-400 font-bold uppercase tracking-wider">● Probíhá hra</span>
+                    <h2 class="text-sm font-semibold text-gray-300" id="currentDateDisplay"></h2>
+                </div>
+                <button onclick="endSession()" class="bg-red-950/60 text-red-300 border border-red-800/80 px-3.5 py-1.5 rounded-lg font-bold active:scale-95 text-xs">
+                    Ukončit den
+                </button>
+            </div>
+
+            <p class="text-center text-xs text-gray-400 my-2">Klepni na toho, kdo vyhrál hru:</p>
+
+            <!-- Tlačítka pro klikání palcem -->
+            <div id="activePlayersGrid" class="grid grid-cols-2 gap-3 mb-4"></div>
+
+            <div class="flex justify-between items-center mb-2 shrink-0">
+                <h3 class="text-xs font-bold uppercase text-gray-400">Průběžné skóre</h3>
+                <button onclick="undoLastGame()" class="text-amber-400 border border-amber-900/60 font-bold px-3 py-1 rounded-lg bg-amber-950/30 active:scale-95 text-xs flex items-center gap-1">
+                    ↩ Vrátit krok
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto bg-gray-800/70 border border-gray-700 rounded-xl p-3">
+                <table class="w-full text-left text-sm" id="sessionFeed"></table>
+            </div>
+        </div>
+
+        <!-- STATISTIKY -->
+        <div id="screen-stats" class="screen hidden flex flex-col h-full max-w-md mx-auto">
+            <div class="flex items-center mb-4 shrink-0">
+                <button onclick="navDashboard()" class="text-gray-400 p-2 font-bold active:scale-95">⬅ Zpět</button>
+                <h2 class="text-lg font-bold ml-2">Celkový žebříček</h2>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto bg-gray-800/80 border border-gray-700 rounded-xl">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-750 text-gray-400 text-xs uppercase sticky top-0 bg-gray-800 border-b border-gray-700">
+                        <tr>
+                            <th class="px-4 py-3">Hráč</th>
+                            <th class="px-4 py-3 text-center">Úspěšnost</th>
+                            <th class="px-4 py-3 text-right">V / P</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTableBody" class="divide-y divide-gray-700 text-sm"></tbody>
+                </table>
+            </div>
+            <p class="text-center text-xs text-gray-500 mt-3 shrink-0">*Zobrazeni hráči s minimálně 3 odehranými hrami</p>
+        </div>
+
+    </main>
+
+    <!-- Firebase SDK (ESM import přes oficiální CDN) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { 
+            getFirestore, collection, addDoc, getDocs, onSnapshot, 
+            query, where, orderBy, deleteDoc, doc, updateDoc, serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // Konfigurace přímo z tvého projektu
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0ea1lrXK4qr5ZQvcWYlovp1vMTAYETio",
+            authDomain: "karty-hospoda.firebaseapp.com",
+            projectId: "karty-hospoda",
+            storageBucket: "karty-hospoda.firebasestorage.app",
+            messagingSenderId: "998922695041",
+            appId: "1:998922695041:web:89726985a2f35ce2773880",
+            measurementId: "G-YSEY4XHZV6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allPlayers = [];
+        let currentSession = null;
+        let sessionGames = [];
+        let unsubscribeGames = null;
+
+        // Inicializace
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('sessionDate').value = today;
+            loadPlayers();
+            listenToActiveSession();
+        });
+
+        // Přepínání obrazovek
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        window.navDashboard = () => showScreen('screen-dashboard');
+        window.navSetup = () => { renderSetupPlayers(); showScreen('screen-setup'); };
+        window.navStats = () => { loadAndRenderStats(); showScreen('screen-stats'); };
+        window.navActiveSession = () => showScreen('screen-session');
+
+        // Hráči
+        function loadPlayers() {
+            onSnapshot(collection(db, "players"), (snapshot) => {
+                allPlayers = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                allPlayers.sort((a, b) => a.name.localeCompare(b.name, 'cs'));
+                if (!document.getElementById('screen-setup').classList.contains('hidden')) {
+                    renderSetupPlayers();
+                }
+            });
+        }
+
+        window.addNewPlayer = async () => {
+            const input = document.getElementById('newPlayerName');
+            const name = input.value.trim();
+            if (!name) return;
+
+            await addDoc(collection(db, "players"), {
+                name: name,
+                createdAt: serverTimestamp()
+            });
+            input.value = '';
+        };
+
+        function renderSetupPlayers() {
+            const list = document.getElementById('playersList');
+            if (allPlayers.length === 0) {
+                list.innerHTML = `<p class="text-gray-500 text-sm text-center py-4">Žádní hráči v databázi. Přidej prvního dole.</p>`;
+                return;
+            }
+
+            list.innerHTML = allPlayers.map(p => `
+                <label class="flex items-center gap-3.5 bg-gray-800/90 border border-gray-700 p-3.5 rounded-xl active:bg-gray-700 transition">
+                    <input type="checkbox" value="${p.id}" onchange="updateSelectedCount()" class="player-checkbox w-5 h-5 rounded bg-gray-900 border-gray-600 text-blue-600 focus:ring-0">
+                    <span class="text-base font-semibold text-gray-200">${p.name}</span>
+                </label>
+            `).join('');
+            updateSelectedCount();
+        }
+
+        window.updateSelectedCount = () => {
+            const count = document.querySelectorAll('.player-checkbox:checked').length;
+            document.getElementById('selectedCount').innerText = `${count} vybráno`;
+        };
+
+        // Běh hry (Session)
+        function listenToActiveSession() {
+            const q = query(collection(db, "sessions"), where("active", "==", true));
+            onSnapshot(q, (snapshot) => {
+                if (!snapshot.empty) {
+                    currentSession = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                    document.getElementById('activeSessionNotice').classList.remove('hidden');
+                    setupActiveSessionUI();
+                    listenToSessionGames();
+                } else {
+                    currentSession = null;
+                    document.getElementById('activeSessionNotice').classList.add('hidden');
+                    if (!document.getElementById('screen-session').classList.contains('hidden')) {
+                        navDashboard();
+                    }
+                }
+            });
+        }
+
+        window.startSession = async () => {
+            const date = document.getElementById('sessionDate').value;
+            const checkboxes = document.querySelectorAll('.player-checkbox:checked');
+            const playerIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (playerIds.length < 2) {
+                alert("Vyber aspoň 2 hráče.");
+                return;
+            }
+
+            await addDoc(collection(db, "sessions"), {
+                date: date,
+                playerIds: playerIds,
+                active: true,
+                createdAt: serverTimestamp()
+            });
+
+            navActiveSession();
+        };
+
+        window.endSession = async () => {
+            if (confirm("Chceš dnešní herní den uzavřít?")) {
+                if (unsubscribeGames) unsubscribeGames();
+                await updateDoc(doc(db, "sessions", currentSession.id), {
+                    active: false
+                });
+                navDashboard();
+            }
+        };
+
+        function setupActiveSessionUI() {
+            document.getElementById('currentDateDisplay').innerText = currentSession.date;
+            const grid = document.getElementById('activePlayersGrid');
+
+            grid.innerHTML = currentSession.playerIds.map(id => {
+                const player = allPlayers.find(p => p.id === id);
+                const name = player ? player.name : 'Neznámý';
+                return `
+                    <button onclick="recordWin('${id}')" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 active:scale-95 text-white font-bold py-5 px-3 rounded-2xl shadow border-b-4 border-blue-800 text-lg transition truncate">
+                        ${name}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // Zápis výhry
+        window.recordWin = async (winnerId) => {
+            const loserIds = currentSession.playerIds.filter(id => id !== winnerId);
+            await addDoc(collection(db, "games"), {
+                sessionId: currentSession.id,
+                winnerId: winnerId,
+                loserIds: loserIds,
+                timestamp: serverTimestamp()
+            });
+        };
+
+        function listenToSessionGames() {
+            if (unsubscribeGames) unsubscribeGames();
+            const q = query(collection(db, "games"), where("sessionId", "==", currentSession.id), orderBy("timestamp", "asc"));
+            unsubscribeGames = onSnapshot(q, (snapshot) => {
+                sessionGames = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderSessionFeed();
+            });
+        }
+
+        function renderSessionFeed() {
+            const winsCount = {};
+            currentSession.playerIds.forEach(id => winsCount[id] = 0);
+
+            sessionGames.forEach(g => {
+                if (winsCount[g.winnerId] !== undefined) {
+                    winsCount[g.winnerId]++;
+                }
+            });
+
+            const feed = document.getElementById('sessionFeed');
+            const sortedIds = Object.keys(winsCount).sort((a, b) => winsCount[b] - winsCount[a]);
+
+            feed.innerHTML = sortedIds.map(id => {
+                const p = allPlayers.find(item => item.id === id);
+                return `
+                    <tr class="border-b border-gray-700/60 last:border-0">
+                        <td class="py-2.5 font-medium text-gray-200">${p ? p.name : '?'}</td>
+                        <td class="py-2.5 text-right font-bold text-amber-400">${winsCount[id]} výher</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        window.undoLastGame = async () => {
+            if (sessionGames.length === 0) return;
+            const lastGame = sessionGames[sessionGames.length - 1];
+            await deleteDoc(doc(db, "games", lastGame.id));
+        };
+
+        // Globální žebříček
+        async function loadAndRenderStats() {
+            const tbody = document.getElementById('statsTableBody');
+            tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-gray-500">Počítám statistiky...</td></tr>`;
+
+            const gamesSnap = await getDocs(collection(db, "games"));
+            const stats = {};
+
+            allPlayers.forEach(p => {
+                stats[p.id] = { name: p.name, wins: 0, losses: 0, total: 0 };
+            });
+
+            gamesSnap.forEach(docSnap => {
+                const g = docSnap.data();
+                if (stats[g.winnerId]) {
+                    stats[g.winnerId].wins++;
+                    stats[g.winnerId].total++;
+                }
+                if (Array.isArray(g.loserIds)) {
+                    g.loserIds.forEach(lId => {
+                        if (stats[lId]) {
+                            stats[lId].losses++;
+                            stats[lId].total++;
+                        }
+                    });
+                }
+            });
+
+            let list = Object.values(stats)
+                .filter(s => s.total >= 3)
+                .map(s => {
+                    s.winrate = ((s.wins / s.total) * 100).toFixed(1);
+                    return s;
+                });
+
+            list.sort((a, b) => b.winrate - a.winrate || b.wins - a.wins);
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-gray-400 text-xs">Zatím málo dat (hráč musí mít odehráno alespoň 3 hry).</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map((s, idx) => `
+                <tr class="${idx === 0 ? 'bg-amber-500/10' : ''}">
+                    <td class="px-4 py-3.5 font-bold flex items-center gap-2">
+                        ${idx === 0 ? '👑' : ''} ${s.name}
+                    </td>
+                    <td class="px-4 py-3.5 text-center font-bold text-amber-400">${s.winrate}%</td>
+                    <td class="px-4 py-3.5 text-right text-xs text-gray-300">
+                        <span class="text-emerald-400 font-semibold">${s.wins}</span> / <span class="text-rose-400 font-semibold">${s.losses}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
